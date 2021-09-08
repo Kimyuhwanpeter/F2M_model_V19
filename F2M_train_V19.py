@@ -313,13 +313,13 @@ def main():
             shuffle(A)
             B_images, B_labels = zip(*B)
             A_images, A_labels = zip(*A)
-            A_images = A_images[:min_]
-            A_labels = A_labels[:min_]
-            B_images = B_images[:min_]
-            B_labels = B_labels[:min_]
+            a_images = A_images[:min_]
+            a_labels = A_labels[:min_]
+            b_images = B_images[:min_]
+            b_labels = B_labels[:min_]
 
-            A_zip = np.array(list(zip(A_images, A_labels)))
-            B_zip = np.array(list(zip(B_images, B_labels)))
+            A_zip = np.array(list(zip(a_images, a_labels)))
+            B_zip = np.array(list(zip(b_images, b_labels)))
 
             # 가까운 나이에 대해서 distance를 구하는 loss를 구성하면, 결국에는 해당이미지의 나이를 그대로 생성하는 효과?를 볼수있을것
             gener = tf.data.Dataset.from_tensor_slices((A_zip, B_zip))
