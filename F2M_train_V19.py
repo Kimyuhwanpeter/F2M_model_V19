@@ -25,13 +25,13 @@ FLAGS = easydict.EasyDict({"img_size": 256,
                            
                            "lr": 0.0002,
                            
-                           "A_txt_path": "D:/[1]DB/[5]4th_paper_DB/Generation/Morph/train_BM.txt",
+                           "A_txt_path": "/yuwhan/yuwhan/Dataset/[2]Fourth_dataset/Generation/Morph/train_BM.txt",
                            
-                           "A_img_path": "D:/[1]DB/[2]third_paper_DB/[4]Age_and_gender/Morph/All/Crop_dlib/",
+                           "A_img_path": "/yuwhan/yuwhan/Dataset/[1]Third_dataset/Morph/All/Crop_dlib/",
                            
-                           "B_txt_path": "D:/[1]DB/[5]4th_paper_DB/Generation/Morph/train_WM.txt",
+                           "B_txt_path": "/yuwhan/yuwhan/Dataset/[2]Fourth_dataset/Generation/Morph/train_WM.txt",
                            
-                           "B_img_path": "D:/[1]DB/[2]third_paper_DB/[4]Age_and_gender/Morph/All/Crop_dlib/",
+                           "B_img_path": "/yuwhan/yuwhan/Dataset/[1]Third_dataset/Morph/All/Crop_dlib/",
 
                            "age_range": [40, 64],
 
@@ -43,9 +43,9 @@ FLAGS = easydict.EasyDict({"img_size": 256,
                            
                            "pre_checkpoint_path": "C:/Users/Yuhwan/Downloads/48",
                            
-                           "save_checkpoint": "",
+                           "save_checkpoint": "/yuwhan/Edisk/yuwhan/Edisk/4th_paper/F2M_model_V19/checkpoint",
                            
-                           "sample_images": "C:/Users/Yuhwan/Pictures/img4",
+                           "sample_images": "/yuwhan/Edisk/yuwhan/Edisk/4th_paper/F2M_model_V19/sample_images",
                            
                            "A_test_txt_path": "D:/[1]DB/[5]4th_paper_DB/Generation/Morph/test_BM.txt",
                            
@@ -213,6 +213,7 @@ def cal_loss(A2B_model, B2A_model, DA_model, DB_model, DA_age_model, DB_age_mode
 
         Cycle_loss = A_class_weights * (tf.reduce_mean(tf.abs(fake_A_ - A_batch_images))) \
             * 5.0 + B_class_weights * (tf.reduce_mean(tf.abs(fake_B_ - B_batch_images))) * 5.0
+        # Cycle을 하여 원본으로 갈때, Cycle된 이미지의 high freguency 성분이 원본 성분과 비슷해지도록
 
         G_gan_loss = B_class_weights * (tf.reduce_mean((DB_fake - tf.ones_like(DB_fake))**2) \
             + A_class_weights * tf.reduce_mean((DA_fake - tf.ones_like(DA_fake))**2))
