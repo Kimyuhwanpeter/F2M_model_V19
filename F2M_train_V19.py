@@ -207,13 +207,12 @@ def cal_loss(A2B_model, B2A_model, DA_model, DB_model, DA_age_model, DB_age_mode
         r_B_m = tf.add(tf.abs(r_B_x), tf.abs(r_B_y))
         r_B = tf.abs(r_B - r_B_m)
 
-        id_loss = B_class_weights * tf.reduce_mean(tf.abs(f_B - r_B)) \
-            + A_class_weights * tf.reduce_mean(tf.abs(f_A - r_A))   # content loss  # style이 아닌 skin  등등 이라고 가정
+        id_loss = B_class_weights * tf.reduce_mean(tf.abs(f_B - r_B)) * 2.5 \
+            + A_class_weights * tf.reduce_mean(tf.abs(f_A - r_A) * 2.5)   # content loss  # style이 아닌 skin  등등 이라고 가정
         # target될 영상을 만드는것이기에, 원본의 영상이 target으로 변할 때 배경 성분은 유지 되도록
 
         Cycle_loss = A_class_weights * (tf.reduce_mean(tf.abs(fake_A_ - A_batch_images))) \
-            * B_class_weights * 10.0 + (tf.reduce_mean(tf.abs(fake_B_ - B_batch_images))) * 10.0
-        # Cycle을 하여 원본으로 갈때, Cycle된 이미지의 high freguency 성분이 원본 성분과 비슷해지도록
+            * 5.0 + B_class_weights * (tf.reduce_mean(tf.abs(fake_B_ - B_batch_images))) * 5.0
 
         G_gan_loss = B_class_weights * (tf.reduce_mean((DB_fake - tf.ones_like(DB_fake))**2) \
             + A_class_weights * tf.reduce_mean((DA_fake - tf.ones_like(DA_fake))**2))
