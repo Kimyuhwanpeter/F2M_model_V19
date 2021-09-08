@@ -29,37 +29,36 @@ class InstanceNormalization(tf.keras.layers.Layer):
         normalized = (x - mean) * inv
         return self.scale * normalized + self.offset
 
-def attention_residual_block(input, filters=256):
+def attention_residual_block(input, dilation=1, filters=256):
     # Depth wise는 GPU 메로리가 일반 conv보다 많이 필요하기때문에, 쓰는것을 보류
     # 1x1 conv로 해결점을 보자
     h = input
 
     h = tf.keras.layers.ReLU()(h)
-    h = tf.pad(h, [[0,0],[1,1],[0,0],[0,0]], 'REFLECT')
+    h = tf.pad(h, [[0,0],[dilation,dilation],[0,0],[0,0]], mode='REFLECT', constant_values=0)
     h = tf.keras.layers.Conv2D(filters=filters, kernel_size=(3, 1), padding="valid",
-                                kernel_regularizer=l1_l2, activity_regularizer=l1)(h)
+                                kernel_regularizer=l1_l2, activity_regularizer=l1, dilation_rate=dilation)(h)
     h = InstanceNormalization()(h)
     h = tf.keras.layers.ReLU()(h)
-
-    h = tf.pad(h, [[0,0],[0,0],[1,1],[0,0]], 'REFLECT')
+    h = tf.pad(h, [[0,0],[0,0],[dilation,dilation],[0,0]], mode='REFLECT', constant_values=0)
     h = tf.keras.layers.Conv2D(filters=filters, kernel_size=(1, 3), padding="valid",
-                                kernel_regularizer=l1_l2, activity_regularizer=l1)(h)
+                                kernel_regularizer=l1_l2, activity_regularizer=l1, dilation_rate=dilation)(h)
     h = InstanceNormalization()(h)
     h = tf.keras.layers.ReLU()(h)
 
-    h = tf.pad(h, [[0,0],[1,1],[1,1],[0,0]], 'REFLECT')
+    h = tf.pad(h, [[0,0],[dilation,dilation],[dilation,dilation],[0,0]], mode='REFLECT', constant_values=0)
     h = tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="valid",
-                                        depthwise_regularizer=l1_l2, activity_regularizer=l1)(h)
+                                        depthwise_regularizer=l1_l2, activity_regularizer=l1, dilation_rate=dilation)(h)
     h = InstanceNormalization()(h)
     h = tf.keras.layers.ReLU()(h)
 
-    h = tf.keras.layers.Conv2D(filters=filters, kernel_size=1, padding="valid",
-                               kernel_regularizer=l1_l2, activity_regularizer=l1)(h)
+    h = tf.keras.layers.Conv2D(filters=filters, kernel_size=1, strides=1, padding="valid",
+                                kernel_regularizer=l1_l2, activity_regularizer=l1)(h)
     h = InstanceNormalization()(h)
 
     return h + input
 
-def decode_residual_block(input, filters=256):
+def decode_residual_block(input, dilation=1, filters=256):
 
     h = input
 
@@ -69,26 +68,25 @@ def decode_residual_block(input, filters=256):
     h_attenion_layer = tf.nn.sigmoid(h_attenion_layer)    # attenion map !
 
     h = tf.keras.layers.ReLU()(h)
-    h = tf.keras.layers.Conv2D(filters=filters, kernel_size=1, padding="valid",
-                               kernel_regularizer=l1_l2, activity_regularizer=l1)(h)
+    h = tf.keras.layers.Conv2D(filters=filters, kernel_size=1, strides=1, padding="valid",
+                                kernel_regularizer=l1_l2, activity_regularizer=l1)(h)
     h = InstanceNormalization()(h)
     h = tf.keras.layers.ReLU()(h)
 
-    h = tf.pad(h, [[0,0],[1,1],[1,1],[0,0]], 'REFLECT')
+    h = tf.pad(h, [[0,0],[dilation,dilation],[dilation,dilation],[0,0]], mode='REFLECT', constant_values=0)
     h = tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="valid",
-                                        depthwise_regularizer=l1_l2, activity_regularizer=l1)(h)
+                                        depthwise_regularizer=l1_l2, activity_regularizer=l1, dilation_rate=dilation)(h)
     h = InstanceNormalization()(h)
     h = tf.keras.layers.ReLU()(h)
 
-    h = tf.pad(h, [[0,0],[1,1],[0,0],[0,0]], 'REFLECT')
+    h = tf.pad(h, [[0,0],[dilation,dilation],[0,0],[0,0]], mode='REFLECT', constant_values=0)
     h = tf.keras.layers.Conv2D(filters=filters, kernel_size=(3, 1), padding="valid",
-                                kernel_regularizer=l1_l2, activity_regularizer=l1)(h)
+                                kernel_regularizer=l1_l2, activity_regularizer=l1, dilation_rate=dilation)(h)
     h = InstanceNormalization()(h)
     h = tf.keras.layers.ReLU()(h)
-
-    h = tf.pad(h, [[0,0],[0,0],[1,1],[0,0]], 'REFLECT')
+    h = tf.pad(h, [[0,0],[0,0],[dilation,dilation],[0,0]], mode='REFLECT', constant_values=0)
     h = tf.keras.layers.Conv2D(filters=filters, kernel_size=(1, 3), padding="valid",
-                                kernel_regularizer=l1_l2, activity_regularizer=l1)(h)
+                                kernel_regularizer=l1_l2, activity_regularizer=l1, dilation_rate=dilation)(h)
     h = InstanceNormalization()(h)
     
     return (h*h_attenion_layer) + input
@@ -136,7 +134,7 @@ def F2M_generator(input_shape=(256, 256, 3), attention_shape=(256, 256, 1)):   #
     h = InstanceNormalization()(h)  # [64, 64, 256]
 
     for i in range(1, 3):
-        h = attention_residual_block(h, filters=256)
+        h = attention_residual_block(h, dilation=i*8, filters=256)
 
     h = tf.keras.layers.ReLU()(h)
     h = tf.keras.layers.Conv2DTranspose(filters=128, kernel_size=3, strides=2, padding="same",
@@ -144,7 +142,7 @@ def F2M_generator(input_shape=(256, 256, 3), attention_shape=(256, 256, 1)):   #
     h = InstanceNormalization()(h)  # [128, 128, 128]
 
     for i in range(1, 4):
-        h = decode_residual_block(h, filters=128)
+        h = decode_residual_block(h, dilation=i * 4, filters=128)
 
     h = tf.keras.layers.ReLU()(h)
     h = tf.keras.layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding="same",
