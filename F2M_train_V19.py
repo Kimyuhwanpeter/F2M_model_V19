@@ -300,8 +300,10 @@ def main():
 
             A_ref_img = generate_ref_img(A_images)  # decoder attention map
             A_ref = tf.reduce_mean(A_ref_img, -1, keepdims=True)
+            A_ref = 1 / (1 + tf.exp(-4.6*A_ref))
             B_ref_img = generate_ref_img(B_images)  # decoder attention map
             B_ref = tf.reduce_mean(B_ref_img, -1, keepdims=True)
+            B_ref = 1 / (1 + tf.exp(-4.6*B_ref))
 
             min_ = min(len(A_images), len(B_images))
             A = list(zip(A_images, A_labels))
