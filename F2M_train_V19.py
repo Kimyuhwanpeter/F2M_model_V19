@@ -207,8 +207,8 @@ def cal_loss(A2B_model, B2A_model, DA_model, DB_model, DA_age_model, DB_age_mode
         r_B_m = tf.add(tf.abs(r_B_x), tf.abs(r_B_y))
         r_B = tf.abs(r_B - r_B_m)
 
-        id_loss = B_class_weights * tf.reduce_mean(tf.abs(f_B - r_B)) * 5.0 \
-            + A_class_weights * tf.reduce_mean(tf.abs(f_A - r_A)) * 5.0   # content loss  # style이 아닌 skin  등등 이라고 가정
+        id_loss = B_class_weights * tf.reduce_mean(tf.abs(f_B - r_B)) \
+            + A_class_weights * tf.reduce_mean(tf.abs(f_A - r_A))   # content loss  # style이 아닌 skin  등등 이라고 가정
         # target될 영상을 만드는것이기에, 원본의 영상이 target으로 변할 때 배경 성분은 유지 되도록
 
         Cycle_loss = A_class_weights * (tf.reduce_mean(tf.abs(fake_A_ - A_batch_images))) \
